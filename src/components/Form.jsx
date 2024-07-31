@@ -58,40 +58,49 @@ const Form = () => {
   const isRegister = pageType === "register";
 
 
-
-
+  const uploadImage = async (image) => {
+    console.log("Received image: ", image);
+    if (image) {
+      try {
+        console.log(image, "uploading...image");
+        const fileName = new Date().getTime() + image.name;
+        const storage = getStorage();
+        console.log("Storage instance: ", storage);
+        const storageRef = ref(storage, fileName);
   
-  const uploadImage = async () => {
-    if (image !== null) {
-      const fileName = new Date().getTime() + image.name;
-      const storage = getStorage(app);
-      const storageRef = ref(storage, fileName);
+        console.log("StorageRef: ", storageRef);
+        console.log("Image to be uploaded: ", image);
   
-      console.log("StorageRef:", storageRef);
-      console.log("Image:", image);
+        const uploadTask = uploadBytesResumable(storageRef, image);
+        console.log("UploadTask created: ", uploadTask);
   
-      const uploadTask = uploadBytesResumable(storageRef, image);
-  
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          console.log("Upload is " + progress + "% done");
-        },
-        (error) => {
-          console.error("Upload error:", error.message);
-        },
-        () => {
-          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-            console.log("Download URL:", downloadURL);
-            setImage(downloadURL);
-          });
-        }
-      );
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {
+            console.log("Upload task state changed: ", snapshot.state);
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            console.log("Upload is " + progress + "% done");
+          },
+          (error) => {
+            console.error("Upload failed", error);
+          },
+          async () => {
+            try {
+              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+              console.log("Download URL: ", downloadURL);
+              setImage(downloadURL);
+            } catch (error) {
+              console.error("Error getting download URL: ", error);
+            }
+          }
+        );
+      } catch (error) {
+        console.error("Unexpected error: ", error);
+      }
+    } else {
+      console.log("No image selected");
     }
   };
-  
-  
   const register = async (values, { resetForm }) => {
     const verified = await verifyOtp();
     if (!verified) {
@@ -107,7 +116,11 @@ const Form = () => {
 
     const savedUserResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/auth/register`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        'Authorization': 'Bearer your-token-here',
+        'Custom-Header': 'CustomValue'
+      },
       body: JSON.stringify(formData),
     });
 
@@ -129,7 +142,11 @@ const Form = () => {
     onSubmitProps.resetForm();
     const loggedInResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/auth/login`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        'Authorization': 'Bearer your-token-here',
+        'Custom-Header': 'CustomValue'
+      },
       body: JSON.stringify(values),
     });
     const loggedIn = await loggedInResponse.json();
@@ -151,19 +168,23 @@ const Form = () => {
   };
 
   const sendOtp = async () => {
-    if (image) await uploadImage();
+    if (image) await uploadImage(image);
     console.log("send otp...");
     setClicked(true);
     setOtpClick(true);
     const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/auth/register/otp`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        'Authorization': 'Bearer your-token-here',
+        'Custom-Header': 'CustomValue'
+      },
       body: JSON.stringify({
         email: otpRef.current.values.email,
         name: `${otpRef.current.values.firstName} ${otpRef.current.values.lastName}`,
       }),
     });
-    console.log("check response",response);
+    console.log("check response", response);
     const otp = await response.json();
     if (otp.error) {
       setClicked(false);
@@ -180,7 +201,6 @@ const Form = () => {
   const verifyOtp = async () => {
     return String(otpRef.current.values.otp) === String(validOtp);
   };
-
   return (
     <Formik
       onSubmit={handleFormSubmit}

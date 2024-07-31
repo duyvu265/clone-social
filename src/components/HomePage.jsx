@@ -35,7 +35,6 @@ const HomePage = (props) => {
       console.log("Reached the bottom of the page");
     }
   });
-
   return (
     <Box>
       <Navbar user={props.user} />

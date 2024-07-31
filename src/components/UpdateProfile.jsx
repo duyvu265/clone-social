@@ -66,7 +66,7 @@ const UpdateProfile = (props) => {
     profilePhoto: "Click here to change your profile photo",
   };
 
-  const uploadImage = async () => {
+  const uploadImage = async (image) => {
     console.log("Uploading image");
     if (image !== null) {
       const fileName = new Date().getTime() + image?.name;

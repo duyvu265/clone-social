@@ -38,6 +38,7 @@ import app from "../../firebase";
 import FlexBetween from "components/UI/FlexBetween";
 
 const MyPostWidget = ({ profilePhoto }) => {
+  console.log(profilePhoto,"profilePhoto");
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isImage, setIsImage] = useState(false);
@@ -97,7 +98,7 @@ const MyPostWidget = ({ profilePhoto }) => {
   };
 
   useEffect(() => {
-    uploadImage(); 
+    uploadImage(image); 
   }, [image]);
 
   const handlePost = async () => {
